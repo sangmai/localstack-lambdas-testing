@@ -25,7 +25,7 @@ awslambda: "LambdaClient" = boto3.client(
 @pytest.fixture(autouse=True)
 def _wait_for_lambdas():
     # makes sure that the lambdas are available before running integration tests
-    awslambda.get_waiter("function_active").wait(FunctionName="localstack-lambda-s3-upload")
+    awslambda.get_waiter("function_active").wait(FunctionName="upload-image-to-s3") 
 
 def test_lambda_handler_with_image_data():
 
@@ -37,7 +37,7 @@ def test_lambda_handler_with_image_data():
   event = {'headers' : {'content-type' : 'image/jpeg', 'filename': 'test-integration'}, 'body': base64_encoded_image_data}  
 
   response = awslambda.invoke(
-            FunctionName="localstack-lambda-s3-upload",
+            FunctionName="upload-image-to-s3",
             Payload=json.dumps(event)
         )
   response_data = json.loads(response['Payload'].read())
@@ -49,7 +49,7 @@ def test_lambda_handler_with_image_data():
 def test_failure_handler_with_no_image_data():
 
   response = awslambda.invoke(
-            FunctionName="localstack-lambda-s3-upload",
+            FunctionName="upload-image-to-s3",
             Payload=''
         )
   response_data = json.loads(response['Payload'].read())

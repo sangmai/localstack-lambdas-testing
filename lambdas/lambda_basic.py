@@ -42,25 +42,25 @@ def create_and_delete_my_bucket(bucket_name, keep_bucket):
     list_my_buckets(s3)
 
     try:
-        logger.info('\nCreating new bucket:', bucket_name)
+        logger.info('Creating new bucket:  %s.', bucket_name)
         bucket = s3.create_bucket(
             Bucket=bucket_name
         )
     except ClientError as e:
         print(e)
-        logger.exception("Exiting the script because bucket creation failed.", e)
+        logger.exception("Exiting the script because bucket creation failed. %s.", e)
 
     bucket.wait_until_exists()
     list_my_buckets(s3)
 
     if not keep_bucket:
-        logger.info('\nDeleting bucket:', bucket.name)
+        logger.info('Deleting bucket: %s.', bucket.name)
         bucket.delete()
 
         bucket.wait_until_not_exists()
         list_my_buckets(s3)
     else:
-        logger.info('\nKeeping bucket:', bucket.name)
+        logger.info('Keeping bucket: %s.', bucket.name)
 
 def create_lambda_deployment_package(function_file_name):
     """
