@@ -20,8 +20,8 @@ os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 os.environ["AWS_ACCESS_KEY_ID"] = "test"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
 
-s3: "S3Client" = boto3.client(
-    "s3", endpoint_url="http://localhost.localstack.cloud:4566"
+s3: "S3Client" = boto3.resource(
+    "s3", endpoint_url="http://localhost.localstack.cloud:4566",region_name='us-east-1'
 )
 ssm: "SSMClient" = boto3.client(
     "ssm", endpoint_url="http://localhost.localstack.cloud:4566"
@@ -33,6 +33,34 @@ iam_resource: "IAMClient" = boto3.resource(
     "iam", endpoint_url="http://localhost.localstack.cloud:4566",region_name='us-east-1', 
 )
 logger = logging.getLogger(__name__)
+
+def list_my_buckets(s3):
+    print('Buckets:\n\t', *[b.name for b in s3.buckets.all()], sep="\n\t")
+
+def create_and_delete_my_bucket(bucket_name, keep_bucket):
+
+    list_my_buckets(s3)
+
+    try:
+        print('\nCreating new bucket:', bucket_name)
+        bucket = s3.create_bucket(
+            Bucket=bucket_name
+        )
+    except ClientError as e:
+        print(e)
+        logger.exception("Exiting the script because bucket creation failed.", e)
+
+    bucket.wait_until_exists()
+    list_my_buckets(s3)
+
+    if not keep_bucket:
+        print('\nDeleting bucket:', bucket.name)
+        bucket.delete()
+
+        bucket.wait_until_not_exists()
+        list_my_buckets(s3)
+    else:
+        print('\nKeeping bucket:', bucket.name)
 
 def create_lambda_deployment_package(function_file_name):
     """
@@ -188,6 +216,10 @@ def usage_demo():
     lambda_handler_name = 'lambda_upload_image_to_s3.handler'
     lambda_role_name = 'lambda-role'
     lambda_function_name = 'upload-image-to-s3'
+    s3_bucket_name = 'localstack-poc-upload-images'
+    
+    create_and_delete_my_bucket(s3_bucket_name, 1)
+
     logger.info(f"Creating AWS Lambda function {lambda_function_name} from the "
           f"{lambda_handler_name} function in {lambda_function_filename}...")
     deployment_package = create_lambda_deployment_package(lambda_function_filename)
