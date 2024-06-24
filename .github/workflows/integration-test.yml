@@ -70,7 +70,8 @@ jobs:
 
       - name: Run the lambda function
         run: |
-          python3 lambdas/lambda_basic.py
+          cd lambdas
+          python3 lambda_basic.py
 
       - name: Run Tests
         env:
