@@ -32,12 +32,11 @@ jobs:
           SERVICES: ec2, s3, lambda, iam 
           DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
-          EDGE_PORT: 4566
           AWS_SECRET_ACCESS_KEY: test
-          DOCKER_HOST: unix:///var/run/docker.sock
         ports:
           - 4566:4566
           - 4510-4559:4510-4559
+          - 4571:4571
         volumes:
           - "/var/run/docker.sock:/var/run/docker.sock"          
     steps:
