@@ -248,8 +248,8 @@ def usage_demo():
     print(f"Please check the S3 bucket with image name: 'test-integration-{uuid.uuid4().__str__()}'")
     print('-'*88)
 
-    delete_lambda_function(lambda_client, lambda_function_name)
-    logger.info(f"Deleted function {lambda_function_name}.")
+    # delete_lambda_function(lambda_client, lambda_function_name)
+    # logger.info(f"Deleted function {lambda_function_name}.")
 
 if __name__ == '__main__':
     usage_demo()
