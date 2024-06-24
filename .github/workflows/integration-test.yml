@@ -59,15 +59,9 @@ jobs:
         run: |
           pip install -r requirements-dev.txt
 
-      # - name: Start LocalStack
-      #   uses: LocalStack/setup-localstack@v0.2.0
-      #   with:
-      #     image-tag: 'latest'
-      #     use-pro: 'true'
-      #     configuration: LS_LOG=trace
-      #     install-awslocal: 'true'
-      #   env:
-      #     LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
+      - name: Create s3
+        run: |
+          bin/deploy.sh
 
       - name: Run the lambda function
         run: |

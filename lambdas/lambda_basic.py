@@ -42,7 +42,7 @@ def create_and_delete_my_bucket(bucket_name, keep_bucket):
     list_my_buckets(s3)
 
     try:
-        print('\nCreating new bucket:', bucket_name)
+        logger.info('\nCreating new bucket:', bucket_name)
         bucket = s3.create_bucket(
             Bucket=bucket_name
         )
@@ -54,13 +54,13 @@ def create_and_delete_my_bucket(bucket_name, keep_bucket):
     list_my_buckets(s3)
 
     if not keep_bucket:
-        print('\nDeleting bucket:', bucket.name)
+        logger.info('\nDeleting bucket:', bucket.name)
         bucket.delete()
 
         bucket.wait_until_not_exists()
         list_my_buckets(s3)
     else:
-        print('\nKeeping bucket:', bucket.name)
+        logger.info('\nKeeping bucket:', bucket.name)
 
 def create_lambda_deployment_package(function_file_name):
     """
@@ -217,7 +217,7 @@ def usage_demo():
     lambda_role_name = 'lambda-role'
     lambda_function_name = 'upload-image-to-s3'
     s3_bucket_name = 'localstack-poc-upload-images'
-    
+
     create_and_delete_my_bucket(s3_bucket_name, 1)
 
     logger.info(f"Creating AWS Lambda function {lambda_function_name} from the "
