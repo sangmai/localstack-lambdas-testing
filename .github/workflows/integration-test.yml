@@ -35,7 +35,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
         ports:
           - 4566:4566
-          - 4571:4571     
+          - 4571:4571
+        volumes:
+          - "/var/run/docker.sock:/var/run/docker.sock"          
     steps:
       - name: Checkout
         uses: actions/checkout@v2
