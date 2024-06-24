@@ -1,0 +1,99 @@
+name: Run Integration Tests
+
+on:
+  push:
+    paths-ignore:
+      - ./*.md
+      - LICENSE
+      - .circleci/*
+      - .gitlab-ci.yml
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      runner-os:
+        description: choose os
+        default: ubuntu-latest
+        type: choice
+        options:
+          - ubuntu-latest
+          - macos-latest
+
+jobs:
+  run-it-tests-job:
+    runs-on: ${{ inputs.runner-os || 'ubuntu-latest' }}
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: ec2, s3, lambda
+          DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        ports:
+          - 4566:4566
+          - 4571:4571
+          
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.11
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+
+      - name: Docker setup (macos only)
+        id: setup-docker-mac
+        if: ${{ runner.os == 'macOS' }}
+        run: |
+          brew install docker
+          colima start
+
+      - name: Set up Project
+        run: |
+          pip install -r requirements-dev.txt
+
+      # - name: Start LocalStack
+      #   uses: LocalStack/setup-localstack@v0.2.0
+      #   with:
+      #     image-tag: 'latest'
+      #     use-pro: 'true'
+      #     configuration: LS_LOG=trace
+      #     install-awslocal: 'true'
+      #   env:
+      #     LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
+
+      - name: Run the lambda function
+        run: |
+          python3 lambdas/lambda_basic.py
+
+      - name: Run Tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests
+
+      - name: Show localstack logs
+        if: always()
+        run: |
+          localstack logs
+
+      - name: Generate a Diagnostic Report
+        if: failure()
+        run: |
+          curl -s localhost:4566/_localstack/diagnose | gzip -cf > diagnose.json.gz
+
+      - name: Upload the Diagnostic Report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: diagnose.json.gz
+          path: ./diagnose.json.gz

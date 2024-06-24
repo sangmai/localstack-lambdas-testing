@@ -1,0 +1,13 @@
+boto3
+requests>=2.20
+mypy-boto3-ssm
+mypy-boto3-sns
+mypy-boto3-s3
+mypy-boto3-firehose
+mypy-boto3-lambda
+mypy-boto3-iam
+mypy-boto3-kinesis
+black
+pytest
+awscli
+awscli-local
