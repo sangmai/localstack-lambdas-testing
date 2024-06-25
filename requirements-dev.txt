@@ -11,3 +11,4 @@ black
 pytest
 awscli
 awscli-local
+faker
