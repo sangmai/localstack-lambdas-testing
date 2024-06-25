@@ -25,7 +25,8 @@ phases:
       - localstack start -d
   pre_build:
     commands:
-      - bin/deploy.sh
+      - cd lambdas
+      - python3 lambda_basic.py
   build:
     commands:
       - pytest tests

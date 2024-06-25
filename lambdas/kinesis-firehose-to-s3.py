@@ -8,6 +8,7 @@ import typing
 from time import sleep
 from faker import Faker
 import uuid
+import s3_basic as s3_helper
 
 from botocore.exceptions import ClientError
 import lambda_basic as lambda_helper
@@ -413,6 +414,7 @@ def main():
     bucket_arn = 'kinesis-poc-storage'
     iam_role_name = 'lambda-role'
 
+    s3_helper.create_and_delete_my_bucket(bucket_arn, 1)
     # Set up logging
     logging.basicConfig(level=logging.DEBUG,
                         format='%(levelname)s: %(asctime)s: %(message)s')
