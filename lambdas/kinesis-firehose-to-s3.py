@@ -51,8 +51,10 @@ def create_kinesis_stream(stream_name, num_shards=1):
     """
 
     # Create the data stream
-    if not kinesis_exists: 
+    logging.info("Create the Kinesis stream")
+    if not kinesis_exists(stream_name): 
         try:
+            logging.info(f"Kinesis {stream_name} is not exist. Create new Kinesis stream")
             kinesis_client.create_stream(StreamName=stream_name,
                                         ShardCount=num_shards)
         except ClientError as e:
@@ -68,6 +70,7 @@ def get_kinesis_arn(stream_name):
     """
 
     # Retrieve stream info
+    logging.info(f"Get {stream_name} arn")
     try:
         result = kinesis_client.describe_stream_summary(StreamName=stream_name)
     except ClientError as e:
@@ -83,7 +86,9 @@ def kinesis_exists(kinesis_name):
     """
 
     # Try to get the description of the Firehose
+    logging.info(f"Check {kinesis_name} is exist or not")
     if get_kinesis_arn(kinesis_name) is None:
+        logging.info(f"{kinesis_name} is not exist")
         return False
     return True
 
@@ -409,16 +414,17 @@ def main():
     print('-'*88)
     # Assign these values before running the program
     # If the specified IAM role does not exist, it will be created
-    kinesis_name = 'kinesis_test_stream'
-    firehose_name = 'firehose_to_s3_stream_3'
-    bucket_arn = 'kinesis-poc-storage'
+    kinesis_name = 'kinesis-test-stream-v1'
+    firehose_name = 'firehose-to_s3-stream-4'
+    bucket_arn = 'kinesis-poc-storage-v1'
     iam_role_name = 'lambda-role'
 
     s3_helper.create_and_delete_my_bucket(bucket_arn, 1)
     # Set up logging
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)s: %(asctime)s: %(message)s')
+    # logging.basicConfig(level=logging.DEBUG,
+    #                     format='%(levelname)s: %(asctime)s: %(message)s')
     # Create a Kinesis stream (this is an asynchronous method)
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     success = create_kinesis_stream(kinesis_name)
     if not success:
         exit(1)

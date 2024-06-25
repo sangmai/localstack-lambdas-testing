@@ -45,3 +45,41 @@ def create_and_delete_my_bucket(bucket_name, keep_bucket):
         list_my_buckets(s3)
     else:
         logger.info('Keeping bucket: %s.', bucket.name)
+
+
+def bucket_exists(bucket_name):
+    """
+    Determine whether a bucket with the specified name exists.
+
+    Usage is shown in usage_demo at the end of this module.
+
+    :param bucket_name: The name of the bucket to check.
+    :return: True when the bucket exists; otherwise, False.
+    """
+    try:
+        s3.meta.client.head_bucket(Bucket=bucket_name)
+        logger.info("Bucket %s exists.", bucket_name)
+        exists = True
+    except ClientError:
+        logger.warning("Bucket %s doesn't exist or you don't have access to it.",
+                       bucket_name)
+        exists = False
+    return exists
+
+
+def delete_bucket(bucket):
+    """
+    Delete a bucket. The bucket must be empty or an error is raised.
+
+    Usage is shown in usage_demo at the end of this module.
+
+    :param bucket: The bucket to delete.
+    """
+    try:
+        bucket.delete()
+        bucket.wait_until_not_exists()
+        logger.info("Bucket %s successfully deleted.", bucket.name)
+    except ClientError:
+        logger.exception("Couldn't delete bucket %s.", bucket.name)
+        raise
+
