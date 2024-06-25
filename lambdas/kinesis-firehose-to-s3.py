@@ -100,6 +100,7 @@ def wait_for_active_kinesis_stream(stream_name):
     """
 
     # Wait until the stream is active
+    logging.info("Wait until the stream is active")
     while True:
         try:
             # Get the stream's current status
@@ -138,6 +139,7 @@ def firehose_exists(firehose_name):
     """
 
     # Try to get the description of the Firehose
+    logging.info("Try to get the description of the Firehose")
     if get_firehose_arn(firehose_name) is None:
         return False
     return True
@@ -151,6 +153,7 @@ def get_iam_role_arn(iam_role_name):
     """
 
     # Try to retrieve information about the role
+    logging.info("Try to retrieve information about the role")
     try:
         result = iam_client.get_role(RoleName=iam_role_name)
     except ClientError as e:
@@ -167,12 +170,13 @@ def iam_role_exists(iam_role_name):
     """
 
     # Try to retrieve information about the role
+    logging.info("Try to retrieve information about the role")
     if get_iam_role_arn(iam_role_name) is None:
         return False
     return True
 
 
-def create_iam_role_for_firehose_to_s3(iam_role_name, s3_bucket,
+def create_iam_role_for_firehose_to_s3(iam_role_name, s3_bucket_arn,
                                        firehose_src_stream=None):
     """Create an IAM role for a Firehose delivery system to S3
 
@@ -197,6 +201,7 @@ def create_iam_role_for_firehose_to_s3(iam_role_name, s3_bucket,
             }
         ]
     }
+    logging.info("Firehose trusted relationship policy document")
     try:
         result = iam_client.create_role(RoleName=iam_role_name,
                                         AssumeRolePolicyDocument=json.dumps(firehose_assume_role))
@@ -206,6 +211,7 @@ def create_iam_role_for_firehose_to_s3(iam_role_name, s3_bucket,
     firehose_role_arn = result['Role']['Arn']
 
     # Define and attach a policy that grants sufficient S3 permissions
+    logging.info("Define and attach a policy that grants sufficient S3 permissions")
     policy_name = 'firehose_s3_access'
     s3_access = {
         "Version": "2012-10-17",
@@ -222,8 +228,8 @@ def create_iam_role_for_firehose_to_s3(iam_role_name, s3_bucket,
                     "s3:PutObject"
                 ],
                 "Resource": [
-                    f"{s3_bucket}/*",
-                    f"{s3_bucket}"
+                    f"arn:aws:s3:::{s3_bucket_arn}/*",
+                    f"arn:aws:s3:::{s3_bucket_arn}"
                 ]
             }
         ]
@@ -289,10 +295,13 @@ def create_firehose_to_s3(firehose_name, s3_bucket_arn, iam_role_name,
     """
 
     # Create Firehose-to-S3 IAM role if necessary
+
     if iam_role_exists(iam_role_name):
         # Retrieve its ARN
+        logging.info("Retrieve its Role ARN")
         iam_role = get_iam_role_arn(iam_role_name)
     else:
+        logging.info("Create Firehose-to-S3 IAM role if necessary")
         iam_role = create_iam_role_for_firehose_to_s3(iam_role_name,
                                                       s3_bucket_arn,
                                                       firehose_src_stream)
@@ -315,7 +324,7 @@ def create_firehose_to_s3(firehose_name, s3_bucket_arn, iam_role_name,
         lambda_function_filename = 'lambda_transform_json_to_csv.py'
         lambda_handler_name = 'lambda_transform_json_to_csv.handler'
         lambda_function_name = 'lambda_transform_json_to_csv'
-        lambda_role_name = 'lambda-role'
+        lambda_role_name = iam_role_name
         deployment_package = lambda_helper.create_lambda_deployment_package(lambda_function_filename)
         iam_role_for_lambda = lambda_helper.create_iam_role_for_lambda(iam_resource, lambda_role_name)
         lambdaFunctionArn = lambda_helper.deploy_lambda_function(lambda_client, lambda_function_name,lambda_handler_name, iam_role_for_lambda, deployment_package )
@@ -414,10 +423,10 @@ def main():
     print('-'*88)
     # Assign these values before running the program
     # If the specified IAM role does not exist, it will be created
-    kinesis_name = 'kinesis-test-stream-v1'
-    firehose_name = 'firehose-to_s3-stream-4'
-    bucket_arn = 'kinesis-poc-storage-v1'
-    iam_role_name = 'lambda-role'
+    kinesis_name = 'kinesis-test-stream'
+    firehose_name = 'firehose-to_s3-stream'
+    bucket_arn = 'kinesis-poc-storage'
+    iam_role_name = 'super-role'
 
     s3_helper.create_and_delete_my_bucket(bucket_arn, 1)
     # Set up logging
