@@ -60,19 +60,19 @@ jobs:
         run: |
           pip install -r requirements-dev.txt
 
-      # - name: Run the lambda function Upload Image to S3
-      #   run: |
-      #     cd lambdas
-      #     python3 lambda_basic.py
+      - name: Run the lambda function Upload Image to S3
+        run: |
+          cd lambdas
+          python3 lambda_basic.py
 
-      # - name: Run Tests for Upload Image to S3
-      #   env:
-      #     AWS_DEFAULT_REGION: us-east-1
-      #     AWS_REGION: us-east-1
-      #     AWS_ACCESS_KEY_ID: test
-      #     AWS_SECRET_ACCESS_KEY: test
-      #   run: |
-      #     pytest tests
+      - name: Run Tests for Upload Image to S3
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests
       
       - name: Run the Kinesis Firehose to S3
         run: |
