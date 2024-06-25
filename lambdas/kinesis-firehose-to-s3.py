@@ -457,15 +457,14 @@ def main():
             "phone":faker.phone_number(),
             "id":uuid.uuid4().__str__()
         }
-    logging.info(json_data)
-    sleep(0.5)
-
-    put_response = kinesis_client.put_record(
-        StreamName=kinesis_name,
-        Data=json.dumps(json_data),
-        PartitionKey='name')
-    logging.info(put_response)
-    logging.info('Test data sent to Firehose stream')
+        logging.info(json_data)
+        sleep(0.5)
+        put_response = kinesis_client.put_record(
+            StreamName=kinesis_name,
+            Data=json.dumps(json_data),
+            PartitionKey='name')
+        logging.info(put_response)
+        logging.info('Test data sent to Firehose stream')
 
 
 if __name__ == '__main__':

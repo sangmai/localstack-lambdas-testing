@@ -8,11 +8,11 @@ import boto3
 import typing
 import base64 
 import uuid
-
+import s3_basic as s3_helper
+import ssm_basic as ssm_helper
 from botocore.exceptions import ClientError
 if typing.TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
-    from mypy_boto3_ssm import SSMClient
     from mypy_boto3_lambda import LambdaClient
     from mypy_boto3_iam import IAMClient
 
@@ -23,9 +23,6 @@ os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
 s3: "S3Client" = boto3.resource(
     "s3", endpoint_url="http://localhost.localstack.cloud:4566",region_name='us-east-1'
 )
-ssm: "SSMClient" = boto3.client(
-    "ssm", endpoint_url="http://localhost.localstack.cloud:4566"
-)
 lambda_client: "LambdaClient" = boto3.client(
     "lambda", endpoint_url="http://localhost.localstack.cloud:4566"
 )
@@ -34,33 +31,6 @@ iam_resource: "IAMClient" = boto3.resource(
 )
 logger = logging.getLogger(__name__)
 
-def list_my_buckets(s3):
-    print('Buckets:\n\t', *[b.name for b in s3.buckets.all()], sep="\n\t")
-
-def create_and_delete_my_bucket(bucket_name, keep_bucket):
-
-    list_my_buckets(s3)
-
-    try:
-        logger.info('Creating new bucket:  %s.', bucket_name)
-        bucket = s3.create_bucket(
-            Bucket=bucket_name
-        )
-    except ClientError as e:
-        print(e)
-        logger.exception("Exiting the script because bucket creation failed. %s.", e)
-
-    bucket.wait_until_exists()
-    list_my_buckets(s3)
-
-    if not keep_bucket:
-        logger.info('Deleting bucket: %s.', bucket.name)
-        bucket.delete()
-
-        bucket.wait_until_not_exists()
-        list_my_buckets(s3)
-    else:
-        logger.info('Keeping bucket: %s.', bucket.name)
 
 def create_lambda_deployment_package(function_file_name):
     """
@@ -212,23 +182,27 @@ def usage_demo():
     print("Welcome to the POC LocalStack Lambda basics demo.")
     print("This is Lambda function to upload image into S3")
     print('-'*88)
+    
     lambda_function_filename = 'lambda_upload_image_to_s3.py'
     lambda_handler_name = 'lambda_upload_image_to_s3.handler'
     lambda_role_name = 'lambda-role'
     lambda_function_name = 'upload-image-to-s3'
     s3_bucket_name = 'localstack-poc-upload-images'
 
-    create_and_delete_my_bucket(s3_bucket_name, 1)
+    s3_helper.create_and_delete_my_bucket(s3_bucket_name, 1)
+
+    ssm_helper.put_parameter('/localstack-poc-upload-images/buckets/images', s3_bucket_name, 'String')
 
     logger.info(f"Creating AWS Lambda function {lambda_function_name} from the "
           f"{lambda_handler_name} function in {lambda_function_filename}...")
+    
     deployment_package = create_lambda_deployment_package(lambda_function_filename)
     iam_role = create_iam_role_for_lambda(iam_resource, lambda_role_name)
 
     deploy_lambda_function(lambda_client, lambda_function_name,lambda_handler_name, iam_role, deployment_package )
     lambda_client.get_waiter("function_active").wait(FunctionName=lambda_function_name)
 
-    file = os.path.join(os.path.dirname(__file__), "nyan-cat.png")
+    file = os.path.join(os.path.dirname(__file__), "data/nyan-cat.png")
     with open(file, 'rb') as image_file:
         image_data = image_file.read()
         base64_encoded_image_data = base64.b64encode(image_data).decode('utf-8')

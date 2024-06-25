@@ -59,9 +59,9 @@ jobs:
         run: |
           pip install -r requirements-dev.txt
 
-      - name: Create s3
-        run: |
-          bin/deploy.sh
+      # - name: Create s3
+      #   run: |
+      #     bin/deploy.sh
 
       - name: Run the lambda function
         run: |
