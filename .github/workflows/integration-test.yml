@@ -23,7 +23,7 @@ on:
           - macos-latest
 
 jobs:
-  run-it-tests-job:
+  local-stack-demo:
     runs-on: ${{ inputs.runner-os || 'ubuntu-latest' }}
     services:
       localstack:
@@ -36,6 +36,7 @@ jobs:
         ports:
           - 4566:4566
           - 4571:4571
+          - 4510-4559:4510-4559
         volumes:
           - "/var/run/docker.sock:/var/run/docker.sock"          
     steps:
